@@ -83,6 +83,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
 
     private fun swapScreens() {
         val isSwapScreensEnabled = !EmulationMenuSettings.swapScreens
+
         EmulationMenuSettings.swapScreens = isSwapScreensEnabled
         NativeLibrary.swapScreens(
             isSwapScreensEnabled,
@@ -463,6 +464,42 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                     R.drawable.button_swap_screens,
                     R.drawable.button_swap_screens_pressed,
                     NativeLibrary.ButtonType.BUTTON_SWAP_SCREENS,
+                    orientation
+                )
+            )
+        }
+
+        if (preferences.getBoolean("buttonToggle15", false)) {
+            overlayButtons.add(
+                initializeOverlayButton(
+                    context,
+                    R.drawable.touchscreen_one,
+                    R.drawable.touchscreen_one,
+                    NativeLibrary.ButtonType.BUTTON_TOUCH_1,
+                    orientation
+                )
+            )
+        }
+
+        if (preferences.getBoolean("buttonToggle16", false)) {
+            overlayButtons.add(
+                initializeOverlayButton(
+                    context,
+                    R.drawable.touchscreen_two,
+                    R.drawable.touchscreen_two,
+                    NativeLibrary.ButtonType.BUTTON_TOUCH_2,
+                    orientation
+                )
+            )
+        }
+
+        if (preferences.getBoolean("buttonToggle17", false)) {
+            overlayButtons.add(
+                initializeOverlayButton(
+                    context,
+                    R.drawable.touchscreen_three,
+                    R.drawable.touchscreen_three,
+                    NativeLibrary.ButtonType.BUTTON_TOUCH_3,
                     orientation
                 )
             )

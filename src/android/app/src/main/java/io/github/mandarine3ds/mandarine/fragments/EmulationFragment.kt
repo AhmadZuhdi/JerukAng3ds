@@ -11,8 +11,10 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -21,6 +23,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.Choreographer
 import android.view.Gravity
+import android.view.InputDevice
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.Surface
@@ -85,7 +88,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private val preferences: SharedPreferences
         get() = PreferenceManager.getDefaultSharedPreferences(MandarineApplication.appContext)
 
-    private lateinit var emulationState: EmulationState
+    lateinit var emulationState: EmulationState
     private var perfStatsUpdater: Runnable? = null
 
     private lateinit var emulationActivity: EmulationActivity
@@ -460,7 +463,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         return binding.drawerLayout.isOpen
     }
 
-    private fun togglePause() {
+    fun togglePause() {
         if (emulationState.isPaused) {
             emulationState.unpause()
         } else {
@@ -974,12 +977,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     private fun showToggleControlsDialog() {
         val editor = preferences.edit()
-        val enabledButtons = BooleanArray(15)
+        val enabledButtons = BooleanArray(resources.getStringArray(R.array.n3dsButtons).size)
         enabledButtons.forEachIndexed { i: Int, _: Boolean ->
             // Buttons that are disabled by default
             var defaultValue = true
             when (i) {
-                6, 7, 12, 13, 14 -> defaultValue = false
+                6, 7, 12, 13, 14, 15, 16, 17 -> defaultValue = false
             }
             enabledButtons[i] = preferences.getBoolean("buttonToggle$i", defaultValue)
         }
@@ -992,6 +995,10 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 editor.putBoolean("buttonToggle$indexSelected", isChecked)
             }
             .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
+                editor.apply()
+                binding.surfaceInputOverlay.refreshControls()
+            }
+            .setOnDismissListener {
                 editor.apply()
                 binding.surfaceInputOverlay.refreshControls()
             }
@@ -1172,11 +1179,36 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             val FRAMETIME = 2
             val SPEED = 3
             perfStatsUpdater = Runnable {
+
+                var gamepad: InputDevice? = null;
+
+                for (deviceId in InputDevice.getDeviceIds()) {
+                    if (gamepad != null) {
+                        continue;
+                    }
+                    val device = InputDevice.getDevice(deviceId)?.apply {
+                        if (sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD
+                            || sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK) {
+                            // This device is a game controller. Store its device ID.
+                            gamepad = this
+                        }
+                    }
+
+                }
+
                 val sb = StringBuilder()
                 val perfStats = NativeLibrary.getPerfStats()
                 val ramUsage =
                     File("/proc/self/statm").readLines()[0].split(' ')[1].toLong() * 4096 / 1000000
-                val ramUsageText = "RAM USAGE: " + ramUsage + " MB"
+                val ramUsageText = "RAM USAGE: $ramUsage MB"
+                val batteryTempText = "BATTERY: ${batteryPct}% | ${temperatureCelsius}C"
+                var gamepadText = ""
+
+                if (gamepad != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        gamepadText = "GAMEPAD: ${gamepad!!.batteryState.capacity*100}%"
+                    }
+                }
                 if (perfStats[FPS] > 0) {
                     if (BooleanSetting.SHOW_FPS.boolean) {
                         sb.append(String.format("FPS: %d", (perfStats[FPS] + 0.5).toInt()))
@@ -1223,6 +1255,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     } else {
                         binding.showStatsOverlayText.setBackgroundResource(0)
                     }
+
+                    sb.append(gamepadText)
 
                     binding.showStatsOverlayText.text = sb.toString()
                 }
@@ -1331,7 +1365,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
     }
 
-    private class EmulationState(private val gamePath: String) {
+    class EmulationState(private val gamePath: String) {
         private var state: State
         private var surface: Surface? = null
 

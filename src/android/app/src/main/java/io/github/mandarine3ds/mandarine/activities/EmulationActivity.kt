@@ -8,10 +8,14 @@ import android.Manifest.permission
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.BatteryManager
 import android.os.Bundle
+import android.os.Handler
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -53,7 +57,7 @@ import io.github.mandarine3ds.mandarine.utils.PlayTimeTracker
 import io.github.mandarine3ds.mandarine.model.Game
 
 class EmulationActivity : AppCompatActivity() {
-    private val preferences: SharedPreferences
+    private val pref: SharedPreferences
         get() = PreferenceManager.getDefaultSharedPreferences(MandarineApplication.appContext)
     private var foregroundService: Intent? = null
     var isActivityRecreated = false
@@ -66,6 +70,11 @@ class EmulationActivity : AppCompatActivity() {
 
     private var isEmulationRunning: Boolean = false
     private var emulationStartTime: Long = 0
+
+    private var enableAutoMap: Boolean = false
+
+    private val touchButtons: MutableMap<String, Map<String, Any>> = mutableMapOf()
+    private val pressedButtons: MutableSet<Int> = mutableSetOf();
 
     private val emulationFragment: EmulationFragment
         get() {
@@ -122,6 +131,30 @@ class EmulationActivity : AppCompatActivity() {
         emulationStartTime = System.currentTimeMillis()
 
         applyOrientationSettings() // Check for orientation settings at startup
+        setupConfig()
+    }
+
+    // TODO: find to get realtime(?) data
+    fun getBatteryInfo(): FloatArray {
+
+        val ifilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val batteryStatus = applicationContext.registerReceiver(null, ifilter)
+
+        if (batteryStatus == null) {
+            return floatArrayOf(0f, 0f)
+        }
+
+        val temperature = batteryStatus!!.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
+        val temperatureCelsius = temperature / 10f
+
+        val level: Int = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+        val scale: Int = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+        val batteryPct = level * 100 / scale.toFloat()
+
+        return floatArrayOf(
+            temperatureCelsius,
+            batteryPct
+        )
     }
 
     // On some devices, the system bars will not disappear on first boot or after some
@@ -131,6 +164,7 @@ class EmulationActivity : AppCompatActivity() {
         super.onResume()
         enableFullscreenImmersive()
         applyOrientationSettings() // Check for orientation settings changes on runtime
+        setupConfig()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -146,6 +180,7 @@ class EmulationActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean("isEmulationRunning", isEmulationRunning)
+        outState.putInt("force_orientation", requestedOrientation)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -256,20 +291,85 @@ class EmulationActivity : AppCompatActivity() {
         screenAdjustmentUtil.changeActivityOrientation(orientationOption)
     }
 
+    private fun setupConfig() {
+
+        enableAutoMap = pref.getBoolean(BooleanSetting.CONTROL_AUTOMAP.name, false)
+
+        touchButtons.clear()
+        touchButtons[NativeLibrary.ButtonType.BUTTON_TOUCH_1.toString()] = mapOf(
+            "portrait_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_1}-Portrait-X", 0f),
+            "portrait_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_1}-Portrait-Y", 0f),
+            "landscape_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_1}-X", 0f),
+            "landscape_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_1}-Y", 0f),
+            "trigger" to setOf(KeyEvent.KEYCODE_BUTTON_L2, KeyEvent.KEYCODE_BUTTON_X)
+        )
+
+        touchButtons[NativeLibrary.ButtonType.BUTTON_TOUCH_2.toString()] = mapOf(
+            "portrait_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_2}-Portrait-X", 0f),
+            "portrait_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_2}-Portrait-Y", 0f),
+            "landscape_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_2}-X", 0f),
+            "landscape_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_2}-Y", 0f),
+            "trigger" to setOf(KeyEvent.KEYCODE_BUTTON_L2, KeyEvent.KEYCODE_BUTTON_Y)
+        )
+
+        touchButtons[NativeLibrary.ButtonType.BUTTON_TOUCH_3.toString()] = mapOf(
+            "portrait_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_3}-Portrait-X", 0f),
+            "portrait_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_3}-Portrait-Y", 0f),
+            "landscape_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_3}-X", 0f),
+            "landscape_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_3}-Y", 0f),
+            "trigger" to setOf(KeyEvent.KEYCODE_BUTTON_L2, KeyEvent.KEYCODE_BUTTON_B)
+        )
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+
+        // TODO: change to detect is event come from gamepad or not
+        val keyToHandle = setOf(
+            KeyEvent.KEYCODE_BUTTON_A,
+            KeyEvent.KEYCODE_BUTTON_B,
+            KeyEvent.KEYCODE_BUTTON_X,
+            KeyEvent.KEYCODE_BUTTON_Y,
+            KeyEvent.KEYCODE_BUTTON_R1,
+            KeyEvent.KEYCODE_BUTTON_R2,
+            KeyEvent.KEYCODE_BUTTON_R2,
+            KeyEvent.KEYCODE_BUTTON_L1,
+            KeyEvent.KEYCODE_BUTTON_L2,
+            KeyEvent.KEYCODE_DPAD_UP,
+            KeyEvent.KEYCODE_DPAD_DOWN,
+            KeyEvent.KEYCODE_DPAD_LEFT,
+            KeyEvent.KEYCODE_DPAD_RIGHT,
+            KeyEvent.KEYCODE_BUTTON_SELECT,
+            KeyEvent.KEYCODE_BUTTON_START,
+            KeyEvent.KEYCODE_BUTTON_MODE,
+            KeyEvent.KEYCODE_BACK
+        )
+
+        if (keyToHandle.contains(event.keyCode)) {
+            try {
+                this.handleDispatchKeyEvent(event)
+            } catch (e: Exception) {
+                return super.dispatchKeyEvent(event)
+            }
+            return true;
+        }
+
+        return super.dispatchKeyEvent(event)
+    }
+
     // Gets button presses
     @Suppress("DEPRECATION")
     @SuppressLint("GestureBackNavigation")
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+    fun handleDispatchKeyEvent(event: KeyEvent): Boolean {
         // TODO: Move this check into native code - prevents crash if input pressed before starting emulation
         if (!NativeLibrary.isRunning()) {
             return false
         }
 
         if (emulationFragment.isDrawerOpen()) {
-            return super.dispatchKeyEvent(event)
+            throw Exception()
         }
 
-        val button = preferences.getInt(InputBindingSetting.getInputButtonKey(event), event.scanCode)
+        val button = pref.getInt(InputBindingSetting.getInputButtonKey(event), event.scanCode)
         val action: Int = when (event.action) {
             KeyEvent.ACTION_DOWN -> {
                 hotkeyUtility.handleHotkey(button)
@@ -287,10 +387,12 @@ class EmulationActivity : AppCompatActivity() {
                 }
 
                 // Normal key events.
+                pressedButtons.add(event.keyCode)
                 NativeLibrary.ButtonState.PRESSED
             }
 
             KeyEvent.ACTION_UP -> {
+                pressedButtons.remove(event.keyCode)
                 hotkeyUtility.HotkeyIsPressed = false
                 NativeLibrary.ButtonState.RELEASED
             }
@@ -299,6 +401,65 @@ class EmulationActivity : AppCompatActivity() {
         val input = event.device
             ?: // Controller was disconnected
             return false
+
+        // TODO: make this configurable
+        if (event.keyCode == KeyEvent.KEYCODE_BUTTON_R2) {
+            NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.BUTTON_X, action)
+            NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.BUTTON_A, action)
+            return true;
+        }
+
+        if (event.action == KeyEvent.ACTION_DOWN && event.keyCode == KeyEvent.KEYCODE_BUTTON_MODE) {
+            Toast.makeText(
+                applicationContext,
+                "Saving state",
+                Toast.LENGTH_LONG
+            ).show()
+
+            NativeLibrary.saveState(NativeLibrary.QUICKSAVE_SLOT)
+
+            return true;
+        }
+
+        if (pressedButtons.size > 1) {
+            for ((k, v) in touchButtons) {
+                val triggerSet = (v.get("trigger") as Iterable<*>).toSet()
+                val intersect = pressedButtons.intersect(triggerSet)
+                if (intersect.size == triggerSet.size && intersect == triggerSet) {
+                    val isPortrait = NativeLibrary.isPortraitMode
+
+                    val x = if (isPortrait) v["portrait_x"] else v["landscape_x"]
+                    val y = if (isPortrait) v["portrait_y"] else v["landscape_y"]
+
+                    NativeLibrary.onTouchEvent(x as Float, y as Float, true)
+                    Handler().postDelayed({
+                        NativeLibrary.onTouchEvent(0f, 0f, false)
+                    }, 50)
+                    return true
+                }
+            }
+        }
+
+        if (enableAutoMap && button == event.scanCode) {
+            return when(event.keyCode) {
+                KeyEvent.KEYCODE_BUTTON_A -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.BUTTON_A, action)
+                KeyEvent.KEYCODE_BUTTON_B -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.BUTTON_B, action)
+                KeyEvent.KEYCODE_BUTTON_X -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.BUTTON_X, action)
+                KeyEvent.KEYCODE_BUTTON_Y -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.BUTTON_Y, action)
+                KeyEvent.KEYCODE_BUTTON_R1 -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.TRIGGER_R, action)
+                KeyEvent.KEYCODE_BUTTON_L1 -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.TRIGGER_L, action)
+                KeyEvent.KEYCODE_DPAD_UP -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.DPAD_UP, action)
+                KeyEvent.KEYCODE_DPAD_DOWN -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.DPAD_DOWN, action)
+                KeyEvent.KEYCODE_DPAD_LEFT -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.DPAD_LEFT, action)
+                KeyEvent.KEYCODE_DPAD_RIGHT -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.DPAD_RIGHT, action)
+                KeyEvent.KEYCODE_BUTTON_SELECT -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.BUTTON_SELECT, action)
+                KeyEvent.KEYCODE_BUTTON_START -> NativeLibrary.onGamePadEvent(input.descriptor, NativeLibrary.ButtonType.BUTTON_START, action)
+                else -> {
+                    NativeLibrary.onGamePadEvent(input.descriptor, button, action)
+                }
+            }
+        }
+
         return NativeLibrary.onGamePadEvent(input.descriptor, button, action)
     }
 
@@ -342,9 +503,9 @@ class EmulationActivity : AppCompatActivity() {
             val origValue = event.getAxisValue(axis)
             var value = ControllerMappingHelper.scaleAxis(input, axis, origValue)
             val nextMapping =
-                preferences.getInt(InputBindingSetting.getInputAxisButtonKey(axis), -1)
+                pref.getInt(InputBindingSetting.getInputAxisButtonKey(axis), -1)
             val guestOrientation =
-                preferences.getInt(InputBindingSetting.getInputAxisOrientationKey(axis), -1)
+                pref.getInt(InputBindingSetting.getInputAxisOrientationKey(axis), -1)
             if (nextMapping == -1 || guestOrientation == -1) {
                 // Axis is unmapped
                 continue

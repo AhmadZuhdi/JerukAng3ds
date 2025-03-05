@@ -226,7 +226,7 @@ class InputBindingSetting(
         }
 
         val code = translateEventToKeyId(keyEvent)
-        writeButtonMapping(getInputButtonKey(code))
+        writeButtonMapping(getInputButtonKey(keyEvent))
         val uiString = "${keyEvent.device.name}: Button $code"
         value = uiString
     }

@@ -4,6 +4,8 @@
 
 package io.github.mandarine3ds.mandarine.features.settings.model
 
+import android.content.pm.ActivityInfo
+
 enum class IntSetting(
     override val key: String,
     override val section: String,
@@ -71,7 +73,7 @@ enum class IntSetting(
     FORCE_HW_VERTEX_SHADERS("force_hw_vertex_shaders", Settings.SECTION_RENDERER, 0),
     DISABLE_SURFACE_TEXTURE_COPY("disable_surface_texture_copy", Settings.SECTION_RENDERER, 0),
     DISABLE_FLUSH_CPU_WRITE("disable_flush_cpu_write", Settings.SECTION_RENDERER, 0),
-    ORIENTATION_OPTION("screen_orientation", Settings.SECTION_LAYOUT, 2),
+    ORIENTATION_OPTION("screen_orientation", Settings.SECTION_LAYOUT, ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE),
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, 0),
     PERF_OVERLAY_POSITION("perf_overlay_position", Settings.SECTION_LAYOUT, 0);
 

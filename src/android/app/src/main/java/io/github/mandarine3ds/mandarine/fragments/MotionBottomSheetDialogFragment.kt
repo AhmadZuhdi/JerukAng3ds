@@ -57,7 +57,13 @@ class MotionBottomSheetDialogFragment : BottomSheetDialogFragment() {
         view.requestFocus()
         view.setOnFocusChangeListener { v, hasFocus -> if (!hasFocus) v.requestFocus() }
         if (setting!!.isButtonMappingSupported()) {
-            dialog?.setOnKeyListener { _, _, event -> onKeyEvent(event) }
+            dialog?.setOnKeyListener { view, keyCode, event ->
+                if (onKeyEvent(event)) {
+                    true
+                } else {
+                    false
+                }
+            }
         }
         if (setting!!.isAxisMappingSupported()) {
             binding.root.setOnGenericMotionListener { _, event -> onMotionEvent(event) }
@@ -112,7 +118,10 @@ class MotionBottomSheetDialogFragment : BottomSheetDialogFragment() {
         Log.debug("[MotionBottomSheetDialogFragment] Received key event: " + event.action)
         return when (event.action) {
             KeyEvent.ACTION_UP -> {
-                setting?.onKeyInput(event)
+                Log.debug("[MotionBottomSheetDialogFragment] ${event.device.name} ${event.device.id}")
+                if (event.device.id > 0) {
+                    setting?.onKeyInput(event)
+                }
                 dismiss()
                 // Even if we ignore the key, we still consume it. Thus return true regardless.
                 true

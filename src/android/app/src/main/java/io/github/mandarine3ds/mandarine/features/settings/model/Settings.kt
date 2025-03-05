@@ -5,16 +5,20 @@
 package io.github.mandarine3ds.mandarine.features.settings.model
 
 import android.text.TextUtils
+import androidx.preference.PreferenceManager
 import io.github.mandarine3ds.mandarine.MandarineApplication
 import io.github.mandarine3ds.mandarine.R
 import io.github.mandarine3ds.mandarine.features.settings.ui.SettingsActivityView
 import io.github.mandarine3ds.mandarine.features.settings.utils.SettingsFile
+import io.github.mandarine3ds.mandarine.utils.Log
 import java.util.TreeMap
 
 class Settings {
     private var gameId: String? = null
 
     var isLoaded = false
+
+    val prefs = PreferenceManager.getDefaultSharedPreferences(MandarineApplication.appContext)
 
     /**
      * A HashMap<String></String>, SettingSection> that constructs a new SettingSection instead of returning null
@@ -51,7 +55,25 @@ class Settings {
 
     private fun loadMandarineSettings(view: SettingsActivityView?) {
         for ((fileName) in configFileSectionsMap) {
-            sections.putAll(SettingsFile.readFile(fileName, view))
+            val edit = prefs.edit()
+            val settings = SettingsFile.readFile(fileName, view)
+
+            try {
+                for (section in settings) {
+                    for (setting in section.value!!.settings) {
+                        if (setting.value is BooleanSetting) {
+                            val booleanSetting = setting.value as BooleanSetting
+                            edit.putBoolean(setting.key, booleanSetting.boolean)
+                        }
+                    }
+                }
+
+                edit.apply()
+            } catch (e: Exception) {
+                Log.error(e.toString());
+            }
+
+            sections.putAll(settings)
         }
     }
 

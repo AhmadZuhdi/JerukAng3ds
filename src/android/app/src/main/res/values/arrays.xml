@@ -129,6 +129,9 @@
         <item>@string/controller_c</item>
         <item>@string/button_home</item>
         <item>@string/button_swap_screens</item>
+        <item>@string/button_touch_1</item>
+        <item>@string/button_touch_2</item>
+        <item>@string/button_touch_3</item>
     </string-array>
 
     <string-array name="cameraImageSourceNames">
@@ -603,6 +606,7 @@
     <string-array name="screenOrientations">
         <item>@string/layout_screen_orientation_auto_sensor</item>
         <item>@string/layout_screen_orientation_landscape</item>
+        <item>@string/layout_screen_orientation_landscape_sensor</item>
         <item>@string/layout_screen_orientation_landscape_reverse</item>
         <item>@string/layout_screen_orientation_portrait</item>
         <item>@string/layout_screen_orientation_portrait_reverse</item>
@@ -610,6 +614,7 @@
     <integer-array name="screenOrientationValues">
         <item>2</item>
         <item>0</item>
+        <item>6</item>
         <item>8</item>
         <item>1</item>
         <item>9</item>

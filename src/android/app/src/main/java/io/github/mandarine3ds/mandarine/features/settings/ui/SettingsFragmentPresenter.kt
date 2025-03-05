@@ -690,6 +690,17 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     private fun addControlsSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_controls))
         sl.apply {
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.CONTROL_AUTOMAP,
+                    R.string.auto_map,
+                    R.string.auto_map_description,
+                    BooleanSetting.CONTROL_AUTOMAP.key,
+                    BooleanSetting.CONTROL_AUTOMAP.defaultValue
+                )
+            )
+
             add(HeaderSetting(R.string.generic_buttons))
             Settings.buttonKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
@@ -730,6 +741,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 val button = getInputObject(key)
                 add(InputBindingSetting(button, Settings.hotkeyTitles[i]))
             }
+
             add(HeaderSetting(R.string.miscellaneous))
             add(
                 SwitchSetting(

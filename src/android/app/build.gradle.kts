@@ -234,7 +234,7 @@ fun getGitVersion(): String {
         versionName = gitTag ?: versionName
     }
 
-    return versionName
+    return "$versionName-$autoVersion"
 }
 
 fun getGitHash(): String =

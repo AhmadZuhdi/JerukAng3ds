@@ -2,13 +2,13 @@
 <resources>
 
     <!-- General application strings -->
-    <string name="app_name" translatable="false">Mandarine</string>
-    <string name="app_disclaimer">This software will run games for the Nintendo 3DS handheld game console. No game titles are included.\n\nBefore you can begin with emulating, please select a folder to store Mandarine\'s user data in.\n\nWhat\'s this:\n<a href='https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Mandarine Android user data and storage</a></string>
-    <string name="app_notification_channel_name" translatable="false">Mandarine</string>
-    <string name="app_notification_channel_id" translatable="false">Mandarine</string>
-    <string name="app_notification_channel_description">Mandarine 3DS emulator notifications</string>
-    <string name="app_notification_running">Mandarine is Running</string>
-    <string name="app_game_install_description">Next, you will need to select a Game Folder. Mandarine will display all of the 3DS ROMs inside of the selected folder in the app.\n\nCIA ROMs, updates and DLC will need to be installed separately by clicking on the folder icon and selecting Install CIA.</string>
+    <string name="app_name" translatable="false">JerukAng3ds</string>
+    <string name="app_disclaimer">This software will run games for the Nintendo 3DS handheld game console. No game titles are included.\n\nBefore you can begin with emulating, please select a folder to store JerukAng3ds\'s user data in.\n\nWhat\'s this:\n<a href='https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - JerukAng3ds Android user data and storage</a></string>
+    <string name="app_notification_channel_name" translatable="false">JerukAng3ds</string>
+    <string name="app_notification_channel_id" translatable="false">JerukAng3ds</string>
+    <string name="app_notification_channel_description">JerukAng3ds 3DS emulator notifications</string>
+    <string name="app_notification_running">JerukAng3ds is Running</string>
+    <string name="app_game_install_description">Next, you will need to select a Game Folder. JerukAng3ds will display all of the 3DS ROMs inside of the selected folder in the app.\n\nCIA ROMs, updates and DLC will need to be installed separately by clicking on the folder icon and selecting Install CIA.</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Settings</string>
@@ -19,7 +19,7 @@
     <string name="install_game_content">Install CIA file</string>
     <string name="install_game_content_description">Install games, updates or DLC</string>
     <string name="share_log">Share Log</string>
-    <string name="share_log_description">Share Mandarine\'s log file to debug issues</string>
+    <string name="share_log_description">Share JerukAng3ds\'s log file to debug issues</string>
     <string name="gpu_driver_manager">GPU Driver Manager</string>
     <string name="install_gpu_driver">Install GPU driver</string>
     <string name="install_gpu_driver_description">Install alternative drivers for potentially better performance or accuracy</string>
@@ -49,9 +49,9 @@
     <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="mandarine_description">An open-source 3DS emulator based on Citra</string>
     <string name="contributors">Credits</string>
-    <string name="contributors_description">Contributors who made Mandarine possible</string>
+    <string name="contributors_description">Contributors who made JerukAng3ds possible</string>
     <string name="contributors_link" translatable="false">https://github.com/mandarine3ds/mandarine/graphs/contributors</string>
-    <string name="licenses_description">Projects that make Mandarine for Android possible</string>
+    <string name="licenses_description">Projects that make JerukAng3ds for Android possible</string>
     <string name="build">Build</string>
     <string name="licenses">Licenses</string>
     <string name="favorite">Favorites</string>
@@ -61,7 +61,7 @@
 
     <!-- Setup strings -->
     <string name="welcome">Welcome!</string>
-    <string name="welcome_description">Learn how to setup &lt;b>Mandarine&lt;/b> and jump into emulation.</string>
+    <string name="welcome_description">Learn how to setup &lt;b>JerukAng3ds&lt;/b> and jump into emulation.</string>
     <string name="get_started">Get started</string>
     <string name="step_complete">Complete!</string>
     <string name="games">Games</string>
@@ -78,7 +78,7 @@
     <string name="select_emulalator_data_folder">Emulator Data Folders</string>
     <string name="select_emulalator_data_folder_description">Select emulator data folders (User folder is required)</string>
     <string name="notification_warning">Skip granting the notification permission?</string>
-    <string name="notification_warning_description">Mandarine won\'t be able to notify you of important information.</string>
+    <string name="notification_warning_description">JerukAng3ds won\'t be able to notify you of important information.</string>
     <string name="camera_permission">Camera</string>
     <string name="camera_permission_description">Grant the camera permission below to emulate the 3DS camera.</string>
     <string name="microphone_permission">Microphone</string>
@@ -94,7 +94,7 @@
     <string name="select_mandarine_user_folder_description"><![CDATA[Select your <a href="https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">user data</a> directory with the button below.]]></string>
     <string name="select">Select</string>
     <string name="cannot_skip">You can\'t skip setting the user folder</string>
-    <string name="cannot_skip_directory_description">This step is required to allow Mandarine to work. Please select a directory and then you can continue.</string>
+    <string name="cannot_skip_directory_description">This step is required to allow JerukAng3ds to work. Please select a directory and then you can continue.</string>
     <string name="cannot_skip_directory_help">https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage</string>
 
     <!-- GameFragment Strings -->
@@ -112,6 +112,7 @@
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Hotkeys</string>
+    <string name="controller_combo">Combo</string>
     <string name="controller_triggers">Triggers</string>
     <string name="controller_trigger">Trigger</string>
     <string name="controller_dpad">D-Pad</string>
@@ -143,6 +144,11 @@
     <string name="button_r" translatable="false">R</string>
     <string name="button_zl" translatable="false">ZL</string>
     <string name="button_zr" translatable="false">ZR</string>
+
+    <string name="button_touch_1" translatable="false">Touch 1</string>
+    <string name="button_touch_2" translatable="false">Touch 2</string>
+    <string name="button_touch_3" translatable="false">Touch 3</string>
+
     <string name="input_message_analog_only">This control must be bound to a gamepad analog stick or D-pad axis!</string>
     <string name="input_message_button_only">This control must be bound to a gamepad button!</string>
 
@@ -154,7 +160,7 @@
     <string name="system_type">System Type</string>
     <string name="download">Download</string>
     <string name="start">Start</string>
-    <string name="keys_missing">Mandarine is missing keys to download system files.</string>
+    <string name="keys_missing">JerukAng3ds is missing keys to download system files.</string>
     <string name="how_to_get_keys"><![CDATA[<a href="https://citra-emu.org/wiki/aes-keys/">How to get keys?</a>]]></string>
     <string name="show_home_apps">Show HOME menu apps in games list</string>
     <string name="run_system_setup">Run System Setup when the HOME Menu is launched</string>
@@ -171,7 +177,10 @@
     <string name="cancelling">Cancelling…</string>
     <string name="home_menu">HOME Menu</string>
     <string name="home_menu_warning">System Files Warning</string>
-    <string name="home_menu_warning_description">Due to how slow Android\'s storage access framework is for accessing Mandarine\'s files, downloading multiple versions of system files can dramatically slow down loading for games, save states, and the games list. Only download the files that you require to avoid any issues with loading speeds.</string>
+    <string name="home_menu_warning_description">Due to how slow Android\'s storage access framework is for accessing JerukAng3ds\'s files, downloading multiple versions of system files can dramatically slow down loading for games, save states, and the games list. Only download the files that you require to avoid any issues with loading speeds.</string>
+
+    <!-- AutoMap -->
+    <string name="auto_map">Enable Auto Map</string>
 
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Buttons</string>
@@ -260,6 +269,7 @@
     <string name="asynchronous_gpu_description">Uses a separate thread to emulate the GPU asynchronously. When enabled, performance will be improved.</string>
     <string name="expand_to_cutout_area">Expand to Cutout Area</string>
     <string name="expand_to_cutout_area_description">Expands the display area to include the cutout (or notch) area while gaming on landscape layout.</string>
+    <string name="auto_map_description">When a button not binded, it will try to use the default layout</string>
     <string name="frame_skip">Frame Skip</string>
     <string name="frame_skip_description">The number of frames to skip. It may cause emulation speed desync issues.</string>
     <string name="custom_cpu_ticks">Custom CPU Ticks</string>
@@ -323,6 +333,7 @@
     <string name="layout_screen_orientation">Screen Orientation</string>
     <string name="layout_screen_orientation_auto_sensor">Automatic</string>
     <string name="layout_screen_orientation_landscape">Landscape</string>
+    <string name="layout_screen_orientation_landscape_sensor">Automatic Landscape</string>
     <string name="layout_screen_orientation_landscape_reverse">Reverse Landscape</string>
     <string name="layout_screen_orientation_portrait">Portrait</string>
     <string name="layout_screen_orientation_portrait_reverse">Reverse Portrait</string>
@@ -403,6 +414,7 @@
     <string name="emulation_control_dpad_slide_enable">D-Pad Sliding</string>
     <string name="emulation_open_settings">Open Settings</string>
     <string name="emulation_open_cheats">Open Cheats</string>
+    <string name="emulation_force_switch_orientation">Change Orientation</string>
     <string name="emulation_switch_screen_layout">Landscape Screen Layout</string>
     <string name="emulation_switch_portrait_layout">Portrait Screen Layout</string>
     <string name="emulation_screen_layout_largescreen">Large Screen</string>
@@ -455,7 +467,7 @@
     <string name="write_permission_needed">You need to allow write access to external storage for the emulator to work</string>
     <string name="load_settings">Loading Settings…</string>
 
-    <string name="external_storage_not_mounted">The external storage needs to be available in order to use Mandarine</string>
+    <string name="external_storage_not_mounted">The external storage needs to be available in order to use JerukAng3ds</string>
 
     <string name="select_dir">Select This Directory</string>
     <string name="empty_gamelist">No files were found or no game directory has been selected yet.</string>
@@ -485,11 +497,11 @@
     <!-- Camera -->
     <string name="camera_select_image">Select Image</string>
     <string name="camera">Camera</string>
-    <string name="camera_permission_needed">Mandarine needs to access your camera to emulate the 3DS\'s cameras.\n\nAlternatively, you can also set \"Image Source\" to \"Still Image\" in Camera Settings.</string>
+    <string name="camera_permission_needed">JerukAng3ds needs to access your camera to emulate the 3DS\'s cameras.\n\nAlternatively, you can also set \"Image Source\" to \"Still Image\" in Camera Settings.</string>
 
     <!-- Microphone -->
     <string name="microphone">Microphone</string>
-    <string name="microphone_permission_needed">Mandarine needs to access your microphone to emulate the 3DS\'s microphone.\n\nAlternatively, you can also change \"Audio Input Device\" in Audio Settings.</string>
+    <string name="microphone_permission_needed">JerukAng3ds needs to access your microphone to emulate the 3DS\'s microphone.\n\nAlternatively, you can also change \"Audio Input Device\" in Audio Settings.</string>
 
     <!-- Core Errors -->
     <string name="abort_button">Abort</string>
@@ -546,9 +558,9 @@
         <item quantity="one">Installing %d file. See notification for more details.</item>
         <item quantity="other">Installing %d files. See notification for more details.</item>
     </plurals>
-    <string name="cia_install_notification_channel_name" translatable="false">Mandarine CIA Install</string>
+    <string name="cia_install_notification_channel_name" translatable="false">JerukAng3ds CIA Install</string>
     <string name="cia_install_notification_channel_id" translatable="false">mandarine-cia</string>
-    <string name="cia_install_notification_channel_description">Mandarine notifications during CIA Install</string>
+    <string name="cia_install_notification_channel_description">JerukAng3ds notifications during CIA Install</string>
     <string name="cia_install_notification_title">Installing CIA</string>
     <string name="cia_install_notification_installing">Installing %s (%d/%d)</string>
     <string name="cia_install_notification_success_title">Successfully installed CIA</string>
@@ -556,7 +568,7 @@
     <string name="cia_install_success">\"%s\" has been installed successfully</string>
     <string name="cia_install_error_aborted">The installation of \"%s\" was aborted.\n Please see the log for more details</string>
     <string name="cia_install_error_invalid">\"%s\" is not a valid CIA</string>
-    <string name="cia_install_error_encrypted">\"%s\" must be decrypted before being used with Mandarine.\n A real 3DS is required</string>
+    <string name="cia_install_error_encrypted">\"%s\" must be decrypted before being used with JerukAng3ds.\n A real 3DS is required</string>
     <string name="cia_install_error_unknown">An unknown error occurred while installing \"%s\".\n Please see the log for more details</string>
 
     <!-- Memory Sizes -->
@@ -876,7 +888,7 @@
     <string name="export">Export</string>
     <string name="string_import">Import</string>
     <string name="string_set">Set</string>
-    <string name="select_mandarine_user_folder_home_description">Changes the files that Mandarine uses to load games</string>
+    <string name="select_mandarine_user_folder_home_description">Changes the files that JerukAng3ds uses to load games</string>
     <string name="directory_already_added">This directory has already been added</string>
     <string name="delete_search_location">Delete Game Folder Search Location</string>
 

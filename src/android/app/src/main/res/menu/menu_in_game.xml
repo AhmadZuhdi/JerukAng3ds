@@ -22,10 +22,16 @@
         android:icon="@drawable/ic_nfc"
         android:title="@string/menu_emulation_amiibo" />
 
+<!--    <item-->
+<!--        android:id="@+id/emulation_force_switch_orientation"-->
+<!--        android:icon="@drawable/ic_portrait_fit_screen"-->
+<!--        android:title="@string/emulation_force_switch_orientation" />-->
+
     <item
         android:id="@+id/menu_landscape_screen_layout"
         android:icon="@drawable/ic_fit_screen"
         android:title="@string/emulation_switch_screen_layout" />
+
 
     <item
         android:id="@+id/menu_portrait_screen_layout"
