@@ -67,6 +67,7 @@ android {
         versionCode = autoVersion
         versionName = getGitVersion()
 
+
         ndk {
             //noinspection ChromeOsAbiSupport
             abiFilters += abiFilter
@@ -161,7 +162,10 @@ android {
         }
     }
     buildToolsVersion = "35.0.0"
+
 }
+
+//base.archivesName = "JerukAng3ds"
 
 dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
@@ -280,3 +284,4 @@ android.applicationVariants.configureEach {
     }
     tasks.named("bundle${capitalizedName}").configure { finalizedBy(copyTask) }
 }
+

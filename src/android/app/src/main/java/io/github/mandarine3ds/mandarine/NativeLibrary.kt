@@ -783,6 +783,9 @@ object NativeLibrary {
         const val BUTTON_TOUCH_1 = 1001
         const val BUTTON_TOUCH_2 = 1002
         const val BUTTON_TOUCH_3 = 1003
+        const val BUTTON_TOUCH_4 = 1004
+        const val BUTTON_TOUCH_5 = 1005
+        const val BUTTON_TOUCH_6 = 1006
     }
 
     /**

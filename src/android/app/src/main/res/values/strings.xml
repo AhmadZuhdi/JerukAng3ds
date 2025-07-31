@@ -181,6 +181,7 @@
 
     <!-- AutoMap -->
     <string name="auto_map">Enable Auto Map</string>
+    <string name="gyro">Enable Gyro</string>
 
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Buttons</string>
@@ -270,6 +271,7 @@
     <string name="expand_to_cutout_area">Expand to Cutout Area</string>
     <string name="expand_to_cutout_area_description">Expands the display area to include the cutout (or notch) area while gaming on landscape layout.</string>
     <string name="auto_map_description">When a button not binded, it will try to use the default layout</string>
+    <string name="gyro_description">Trigger DPad based on gyro input. currently only support when R1 is pressed</string>
     <string name="frame_skip">Frame Skip</string>
     <string name="frame_skip_description">The number of frames to skip. It may cause emulation speed desync issues.</string>
     <string name="custom_cpu_ticks">Custom CPU Ticks</string>

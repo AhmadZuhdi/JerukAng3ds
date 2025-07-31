@@ -975,7 +975,15 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             scale *= (preferences.getInt("controlScale", 50) + 50).toFloat()
             scale /= 100f
 
-            scale *= (preferences.getInt("controlScale-$buttonId", 50) + 50).toFloat()
+            val touchscreenButton = listOf(R.drawable.touchscreen_one, R.drawable.touchscreen_two, R.drawable.touchscreen_three)
+
+            var defaultScale = 50
+
+            if (touchscreenButton.contains(defaultResId)) {
+                defaultScale = 25
+            }
+
+            scale *= (preferences.getInt("controlScale-$buttonId", defaultScale) + 50).toFloat()
             scale /= 100f
 
             val opacity: Int = preferences.getInt("controlOpacity", 100) * 255 / 100
@@ -983,6 +991,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             // Initialize the InputOverlayDrawableButton.
             val defaultStateBitmap = getBitmap(context, defaultResId, scale)
             val pressedStateBitmap = getBitmap(context, pressedResId, scale)
+
             val overlayDrawable =
                 InputOverlayDrawableButton(res, defaultStateBitmap, pressedStateBitmap, buttonId, opacity)
 
@@ -1001,6 +1010,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
 
             // Need to set the image's position
             overlayDrawable.setPosition(drawableX, drawableY)
+
             return overlayDrawable
         }
 

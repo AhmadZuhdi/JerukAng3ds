@@ -1196,12 +1196,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
                 }
 
-                val sb = StringBuilder()
+                var sb = arrayOf<String>()
                 val perfStats = NativeLibrary.getPerfStats()
-                val ramUsage =
-                    File("/proc/self/statm").readLines()[0].split(' ')[1].toLong() * 4096 / 1000000
-                val ramUsageText = "RAM USAGE: $ramUsage MB"
-                val batteryTempText = "BATTERY: ${batteryPct}% | ${temperatureCelsius}C"
                 var gamepadText = ""
 
                 if (gamepad != null) {
@@ -1209,45 +1205,39 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         gamepadText = "GAMEPAD: ${gamepad!!.batteryState.capacity*100}%"
                     }
                 }
+
                 if (perfStats[FPS] > 0) {
                     if (BooleanSetting.SHOW_FPS.boolean) {
-                        sb.append(String.format("FPS: %d", (perfStats[FPS] + 0.5).toInt()))
+
+                        sb += "FPS: ${(perfStats[FPS] + 0.5).toInt()}"
                     }
 
                     if (BooleanSetting.SHOW_SPEED.boolean) {
-                        if (sb.isNotEmpty()) sb.append(" | ")
-                        sb.append(
-                            String.format(
-                                "Speed: %d%%",
-                                (perfStats[SPEED] * 100.0 + 0.5).toInt()
-                            )
-                        )
+                        sb += "Speed: ${(perfStats[SPEED] * 100.0 + 0.5).toInt()}"
                     }
 
                     if (BooleanSetting.SHOW_APP_RAM_USAGE.boolean) {
-                        if (sb.isNotEmpty()) sb.append(" | ")
                         val appRamUsage =
                             File("/proc/self/statm").readLines()[0].split(' ')[1].toLong() * 4096 / 1000000
-                        sb.append("Process RAM: $appRamUsage MB")
+                        sb += ("Process RAM: $appRamUsage MB")
                     }
 
                     if (BooleanSetting.SHOW_SYSTEM_RAM_USAGE.boolean) {
-                        if (sb.isNotEmpty()) sb.append(" | ")
                         context?.let { ctx ->
                             val activityManager =
                                 ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
                             val memInfo = ActivityManager.MemoryInfo()
                             activityManager.getMemoryInfo(memInfo)
                             val usedRamMB = (memInfo.totalMem - memInfo.availMem) / 1048576L
-                            sb.append("RAM: $usedRamMB MB")
+                            sb += ("RAM: $usedRamMB MB")
                         }
                     }
 
                     if (BooleanSetting.SHOW_BAT_TEMPERATURE.boolean) {
-                        if (sb.isNotEmpty()) sb.append(" | ")
-                        val batteryTemp = getBatteryTemperature()
-                        val tempF = celsiusToFahrenheit(batteryTemp)
-                        sb.append(String.format("%.1f°C/%.1f°F", batteryTemp, tempF))
+                        val batteryTemp = emulationActivity.batteryInfo["temp"] ?: 0f
+                        val percentage = emulationActivity.batteryInfo["percent"] ?: 0f
+
+                        sb += "${percentage}% ${batteryTemp}C"
                     }
 
                     if (BooleanSetting.OVERLAY_BACKGROUND.boolean) {
@@ -1256,9 +1246,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         binding.showStatsOverlayText.setBackgroundResource(0)
                     }
 
-                    sb.append(gamepadText)
+                    sb += (gamepadText)
 
-                    binding.showStatsOverlayText.text = sb.toString()
+                    binding.showStatsOverlayText.text = sb.joinToString(separator = "\n")
                 }
                 perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 3000)
             }
@@ -1306,21 +1296,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         binding.showStatsOverlayText.layoutParams = params
-    }
-
-
-    // Thanks to Citron for this code
-    private fun getBatteryTemperature(): Float {
-        try {
-            val batteryIntent = requireContext().registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-            // Temperature in tenths of a degree Celsius
-            val temperature = batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0
-            // Convert to degrees Celsius
-            return temperature / 10.0f
-        } catch (e: Exception) {
-            Log.error("[EmulationFragment] Failed to get battery temperature: ${e.message}")
-            return 0.0f
-        }
     }
 
     private fun celsiusToFahrenheit(celsius: Float): Float {

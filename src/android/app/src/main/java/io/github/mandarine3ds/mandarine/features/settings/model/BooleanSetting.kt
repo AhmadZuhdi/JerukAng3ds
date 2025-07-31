@@ -11,6 +11,7 @@ enum class BooleanSetting(
 ) : AbstractBooleanSetting {
     EXPAND_TO_CUTOUT_AREA("expand_to_cutout_area", Settings.SECTION_LAYOUT, false),
     CONTROL_AUTOMAP("control_automap", Settings.SECTION_CONTROLS, false),
+    CONTROL_GYRO("control_gyro", Settings.SECTION_CONTROLS, false),
     SPIRV_SHADER_GEN("spirv_shader_gen", Settings.SECTION_RENDERER, true),
     ASYNC_SHADERS("async_shader_compilation", Settings.SECTION_RENDERER, false),
     ADRENO_GPU_BOOST("adreno_gpu_boost", Settings.SECTION_RENDERER, false),

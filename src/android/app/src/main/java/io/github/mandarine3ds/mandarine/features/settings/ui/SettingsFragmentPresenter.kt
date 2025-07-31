@@ -701,6 +701,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
 
+            add(
+                SwitchSetting(
+                    BooleanSetting.CONTROL_GYRO,
+                    R.string.gyro,
+                    R.string.gyro_description,
+                    BooleanSetting.CONTROL_GYRO.key,
+                    BooleanSetting.CONTROL_GYRO.defaultValue
+                )
+            )
+
             add(HeaderSetting(R.string.generic_buttons))
             Settings.buttonKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)

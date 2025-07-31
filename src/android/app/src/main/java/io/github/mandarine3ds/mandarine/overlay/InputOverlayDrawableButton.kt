@@ -7,11 +7,13 @@ package io.github.mandarine3ds.mandarine.overlay
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.drawable.BitmapDrawable
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import io.github.mandarine3ds.mandarine.NativeLibrary
+import io.github.mandarine3ds.mandarine.R
 
 /**
  * Custom [BitmapDrawable] that is capable

@@ -7,11 +7,16 @@ package io.github.mandarine3ds.mandarine.activities
 import android.Manifest.permission
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
-import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.net.Uri
 import android.os.BatteryManager
 import android.os.Bundle
@@ -55,8 +60,9 @@ import io.github.mandarine3ds.mandarine.features.settings.model.IntSetting
 import androidx.core.os.BundleCompat
 import io.github.mandarine3ds.mandarine.utils.PlayTimeTracker
 import io.github.mandarine3ds.mandarine.model.Game
+import kotlin.math.abs
 
-class EmulationActivity : AppCompatActivity() {
+class EmulationActivity : AppCompatActivity(), SensorEventListener {
     private val pref: SharedPreferences
         get() = PreferenceManager.getDefaultSharedPreferences(MandarineApplication.appContext)
     private var foregroundService: Intent? = null
@@ -72,9 +78,16 @@ class EmulationActivity : AppCompatActivity() {
     private var emulationStartTime: Long = 0
 
     private var enableAutoMap: Boolean = false
+    private var enableGyro: Boolean = false
 
     private val touchButtons: MutableMap<String, Map<String, Any>> = mutableMapOf()
     private val pressedButtons: MutableSet<Int> = mutableSetOf();
+
+    // gyro related data
+    private lateinit var mSensorManager: SensorManager
+    private var mGyroscope: Sensor? = null
+    private val tiltThreshold = 0.2f // Adjust this threshold as needed
+    private var isListeningGyro = false
 
     private val emulationFragment: EmulationFragment
         get() {
@@ -82,6 +95,27 @@ class EmulationActivity : AppCompatActivity() {
                 supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
             return navHostFragment.getChildFragmentManager().fragments.last() as EmulationFragment
         }
+
+    val batteryInfo = mutableMapOf(
+        Pair("percent", 0f),
+        Pair("temp", 0f),
+    )
+
+    private val batteryReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let {
+                val level: Int = it.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                val scale: Int = it.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+                val batteryPct = level * 100 / scale.toFloat()
+
+                val temperature = it.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0
+
+                batteryInfo["percent"] = batteryPct
+                batteryInfo["temp"] = temperature / 10f
+
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeUtil.setTheme(this)
@@ -130,31 +164,12 @@ class EmulationActivity : AppCompatActivity() {
 
         emulationStartTime = System.currentTimeMillis()
 
+        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        registerReceiver(batteryReceiver, filter)
+
         applyOrientationSettings() // Check for orientation settings at startup
         setupConfig()
-    }
-
-    // TODO: find to get realtime(?) data
-    fun getBatteryInfo(): FloatArray {
-
-        val ifilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val batteryStatus = applicationContext.registerReceiver(null, ifilter)
-
-        if (batteryStatus == null) {
-            return floatArrayOf(0f, 0f)
-        }
-
-        val temperature = batteryStatus!!.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
-        val temperatureCelsius = temperature / 10f
-
-        val level: Int = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-        val scale: Int = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-        val batteryPct = level * 100 / scale.toFloat()
-
-        return floatArrayOf(
-            temperatureCelsius,
-            batteryPct
-        )
+        setupGyro()
     }
 
     // On some devices, the system bars will not disappear on first boot or after some
@@ -205,6 +220,9 @@ class EmulationActivity : AppCompatActivity() {
         stopForegroundService(this)
         isEmulationRunning = false
         instance = null
+
+        unregisterReceiver(batteryReceiver)
+
         super.onDestroy()
     }
 
@@ -295,30 +313,75 @@ class EmulationActivity : AppCompatActivity() {
 
         enableAutoMap = pref.getBoolean(BooleanSetting.CONTROL_AUTOMAP.name, false)
 
+        val triggerTouch = {buttonKey: String ->
+            val isPortrait = NativeLibrary.isPortraitMode
+
+            val portraitX = pref.getFloat("${buttonKey}-Portrait-X", 0f)
+            val portraitY = pref.getFloat("${buttonKey}-Portrait-Y", 0f)
+
+            val landscapeX = pref.getFloat("${buttonKey}-X", 0f)
+            val landscapeY = pref.getFloat("${buttonKey}-Y", 0f)
+
+            val x = if (isPortrait) portraitX else landscapeX
+            val y = if (isPortrait) portraitY else landscapeY
+
+            NativeLibrary.onTouchEvent(x, y, true)
+            Handler().postDelayed({
+                NativeLibrary.onTouchEvent(0f, 0f, false)
+            }, 50)
+        }
+
         touchButtons.clear()
         touchButtons[NativeLibrary.ButtonType.BUTTON_TOUCH_1.toString()] = mapOf(
-            "portrait_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_1}-Portrait-X", 0f),
-            "portrait_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_1}-Portrait-Y", 0f),
-            "landscape_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_1}-X", 0f),
-            "landscape_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_1}-Y", 0f),
+            "callback" to {
+                triggerTouch(NativeLibrary.ButtonType.BUTTON_TOUCH_1.toString())
+            },
             "trigger" to setOf(KeyEvent.KEYCODE_BUTTON_L2, KeyEvent.KEYCODE_BUTTON_X)
         )
 
         touchButtons[NativeLibrary.ButtonType.BUTTON_TOUCH_2.toString()] = mapOf(
-            "portrait_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_2}-Portrait-X", 0f),
-            "portrait_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_2}-Portrait-Y", 0f),
-            "landscape_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_2}-X", 0f),
-            "landscape_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_2}-Y", 0f),
+            "callback" to {
+                triggerTouch(NativeLibrary.ButtonType.BUTTON_TOUCH_2.toString())
+            },
             "trigger" to setOf(KeyEvent.KEYCODE_BUTTON_L2, KeyEvent.KEYCODE_BUTTON_Y)
         )
 
         touchButtons[NativeLibrary.ButtonType.BUTTON_TOUCH_3.toString()] = mapOf(
-            "portrait_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_3}-Portrait-X", 0f),
-            "portrait_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_3}-Portrait-Y", 0f),
-            "landscape_x" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_3}-X", 0f),
-            "landscape_y" to pref.getFloat("${NativeLibrary.ButtonType.BUTTON_TOUCH_3}-Y", 0f),
+            "callback" to {
+                triggerTouch(NativeLibrary.ButtonType.BUTTON_TOUCH_3.toString())
+            },
             "trigger" to setOf(KeyEvent.KEYCODE_BUTTON_L2, KeyEvent.KEYCODE_BUTTON_B)
         )
+    }
+
+    private fun setupGyro() {
+
+        enableGyro = pref.getBoolean(BooleanSetting.CONTROL_AUTOMAP.name, false)
+
+        if (enableGyro) {
+            mSensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+            mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+        } else {
+            unregisterGyro()
+        }
+
+    }
+
+    private fun listenToGyro() {
+        if (isListeningGyro || !enableGyro) {
+            return
+        }
+        mGyroscope?.let {
+            mSensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+            isListeningGyro = true
+        }
+    }
+
+    private fun unregisterGyro() {
+        mGyroscope?.let {
+            mSensorManager.unregisterListener(this)
+            isListeningGyro = false
+        }
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -330,7 +393,6 @@ class EmulationActivity : AppCompatActivity() {
             KeyEvent.KEYCODE_BUTTON_X,
             KeyEvent.KEYCODE_BUTTON_Y,
             KeyEvent.KEYCODE_BUTTON_R1,
-            KeyEvent.KEYCODE_BUTTON_R2,
             KeyEvent.KEYCODE_BUTTON_R2,
             KeyEvent.KEYCODE_BUTTON_L1,
             KeyEvent.KEYCODE_BUTTON_L2,
@@ -409,6 +471,16 @@ class EmulationActivity : AppCompatActivity() {
             return true;
         }
 
+        // TODO: make this configurable
+        // add/remove listener for gyro
+        if (event.keyCode == KeyEvent.KEYCODE_BUTTON_R1) {
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                listenToGyro()
+            } else {
+                unregisterGyro()
+            }
+        }
+
         if (event.action == KeyEvent.ACTION_DOWN && event.keyCode == KeyEvent.KEYCODE_BUTTON_MODE) {
             Toast.makeText(
                 applicationContext,
@@ -425,16 +497,9 @@ class EmulationActivity : AppCompatActivity() {
             for ((k, v) in touchButtons) {
                 val triggerSet = (v.get("trigger") as Iterable<*>).toSet()
                 val intersect = pressedButtons.intersect(triggerSet)
-                if (intersect.size == triggerSet.size && intersect == triggerSet) {
-                    val isPortrait = NativeLibrary.isPortraitMode
-
-                    val x = if (isPortrait) v["portrait_x"] else v["landscape_x"]
-                    val y = if (isPortrait) v["portrait_y"] else v["landscape_y"]
-
-                    NativeLibrary.onTouchEvent(x as Float, y as Float, true)
-                    Handler().postDelayed({
-                        NativeLibrary.onTouchEvent(0f, 0f, false)
-                    }, 50)
+                val callback = v.get("callback")
+                if (intersect.size == triggerSet.size && intersect == triggerSet && callback != null) {
+                    (callback as () -> Unit)()
                     return true
                 }
             }
@@ -715,5 +780,62 @@ class EmulationActivity : AppCompatActivity() {
         fun isRunning(): Boolean {
             return instance?.isEmulationRunning ?: false
         }
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        event?.let {
+            if (it.sensor.type == Sensor.TYPE_GYROSCOPE) {
+                val x = it.values[0]
+                val y = it.values[1]
+                val z = it.values[2]
+
+                val triggerDpad: (Int, Int) -> Unit = { dpad, dpad2 ->
+                    println("triggerDpad $dpad $dpad2")
+                    NativeLibrary.onGamePadEvent(
+                        NativeLibrary.TouchScreenDevice,
+                        dpad,
+                        NativeLibrary.ButtonState.PRESSED
+                    )
+
+                    NativeLibrary.onGamePadEvent(
+                        NativeLibrary.TouchScreenDevice,
+                        dpad2,
+                        NativeLibrary.ButtonState.RELEASED
+                    )
+
+                    Handler().postDelayed({
+                        NativeLibrary.onGamePadEvent(
+                            NativeLibrary.TouchScreenDevice,
+                            dpad,
+                            NativeLibrary.ButtonState.RELEASED
+                        )
+                    }, 500)
+                }
+
+                if (abs(x) > tiltThreshold || abs(y) > tiltThreshold) {
+                    if (abs(x) > abs(y)) {
+                        if (x > 0) {
+//                            println("Tilt Left")
+                            triggerDpad(NativeLibrary.ButtonType.DPAD_LEFT, NativeLibrary.ButtonType.DPAD_RIGHT)
+                        } else {
+//                            println("Tilt Right")
+                            triggerDpad(NativeLibrary.ButtonType.DPAD_RIGHT, NativeLibrary.ButtonType.DPAD_LEFT)
+                        }
+                    } else {
+                        if (y > 0) {
+                            triggerDpad(NativeLibrary.ButtonType.DPAD_UP, NativeLibrary.ButtonType.DPAD_DOWN)
+//                            println("Tilt Down")
+                        } else {
+                            triggerDpad(NativeLibrary.ButtonType.DPAD_DOWN, NativeLibrary.ButtonType.DPAD_UP)
+//                            println("Tilt Up")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+
     }
 }
